@@ -1,3 +1,4 @@
+import re
 import secrets
 import subprocess
 from typing import Union
@@ -42,7 +43,7 @@ async def gam_exception_handler(request: Request, exc: GamException):
 
 def command_executor(cmd: Union[list[list[str]], list[str]]) -> dict:
     output = []
-    if isinstance(type(cmd[0]), list):
+    if isinstance(cmd[0], list):
         for c in cmd:
             c = ['gam'] + c
             p = subprocess.Popen(c, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -108,7 +109,14 @@ def reset_password(user: User):
         ['update', 'user', user.email, 'changepassword', 'on'],
         ['update', 'user', user.email, 'changepassword', 'off'],
     ]
-    return command_executor(cmds)
+    output = command_executor(cmds)
+    output.update({"password": password})
+    return output
+
+
+def parse_backup_codes(stdout: str):
+    pattern = re.compile(r"(\d{1,2}: \d{8})", re.MULTILINE)
+    return pattern.findall(stdout)
 
 
 @app.post('/reset-token', response_model=ResponseOutput,
@@ -118,7 +126,10 @@ def reset_token(user: User):
         ['user', user.email, 'deprovision'],
         ['user', user.email, 'update', 'backupcodes'],
     ]
-    return command_executor(cmds)
+    output = command_executor(cmds)
+    backup_codes = parse_backup_codes(output["output"][1]["stdout"])
+    output.update({"backup_codes": backup_codes})
+    return output
 
 
 @app.post('/disable-user-mailing', response_model=ResponseOutput,
