@@ -139,7 +139,7 @@ def disable_user_mailing(user: User):
         ['user', user.email, 'forward', 'off'],
         ['user', user.email, 'imap', 'off'],
         ['user', user.email, 'pop', 'off'],
-        ['user', user.email, 'gal', 'off'],
+        ['update', 'user', user.email, 'gal', 'off'],
     ]
     return command_executor(cmds)
 
