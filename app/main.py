@@ -6,7 +6,7 @@ from typing import Union
 from fastapi import FastAPI, status, Request
 from fastapi.responses import JSONResponse
 
-from app.model import User, ResponseOutput, Command
+from app.model import User, ResponseOutput, Command, ResponseOutputPassword, ResponseOutputBackupCodes
 from app.rc_handler import return_codes
 
 app = FastAPI(
@@ -43,8 +43,10 @@ async def gam_exception_handler(request: Request, exc: GamException):
 
 def command_executor(cmd: Union[list[list[str]], list[str]]) -> dict:
     output = []
-    if isinstance(cmd[0], list):
+    if cmd and isinstance(cmd[0], list):
         for c in cmd:
+            if not c:
+                continue
             c = ['gam'] + c
             p = subprocess.Popen(c, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
             out, err = p.communicate()
@@ -53,7 +55,7 @@ def command_executor(cmd: Union[list[list[str]], list[str]]) -> dict:
             else:
                 raise GamException(rc=p.returncode, cmd=c, stderr=err.decode('utf-8'))
 
-    else:
+    elif cmd and isinstance(cmd, list):
         cmd = ['gam'] + cmd
         p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         out, err = p.communicate()
@@ -100,7 +102,7 @@ def info(user: User):
     return command_executor(cmd)
 
 
-@app.post('/reset-password', response_model=ResponseOutput,
+@app.post('/reset-password', response_model=ResponseOutputPassword,
           description="Resets user password and sets it to random")
 def reset_password(user: User):
     password = secrets.token_urlsafe(15)
@@ -119,7 +121,7 @@ def parse_backup_codes(stdout: str):
     return pattern.findall(stdout)
 
 
-@app.post('/reset-token', response_model=ResponseOutput,
+@app.post('/reset-token', response_model=ResponseOutputBackupCodes,
           description="Removes all backup codes and active tokens for user")
 def reset_token(user: User):
     cmds = [

@@ -18,3 +18,11 @@ class ResponsePartial(BaseModel):
 
 class ResponseOutput(BaseModel):
     output: list[ResponsePartial]
+
+
+class ResponseOutputBackupCodes(ResponseOutput):
+    backup_codes: list[str] | None
+
+
+class ResponseOutputPassword(ResponseOutput):
+    password: str
