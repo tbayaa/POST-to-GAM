@@ -175,8 +175,8 @@ def disable_2fa(user: User):
           description="Removes user recovery data - phone and alt. mail")
 def remove_recovery(user: User):
     cmds = [
-        ['user', user.email, 'recoveryemail', ''],
-        ['user', user.email, 'recoveryphone', ''],
+        ['update', 'user', user.email, 'recoveryemail', ''],
+        ['update', 'user', user.email, 'recoveryphone', ''],
     ]
     return command_executor(cmds)
 
